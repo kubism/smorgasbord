@@ -28,7 +28,7 @@ import (
 )
 
 const prefix = `/*
-Copyright 2020 Testutil Authors
+Copyright 2020 Smorgasbord Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,7 +43,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */`
 
-var skip = map[string]bool{}
+var skip = map[string]bool{
+	"../../pkg/testutil/dex_config.go": true,
+}
 
 var _ = Describe("License", func() {
 	It("should exist in every .go-file", func() {
