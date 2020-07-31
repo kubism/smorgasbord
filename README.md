@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/kubism/smorgasbord.svg?branch=master)](https://travis-ci.org/kubism/smorgasbord)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubism/smorgasbord)](https://goreportcard.com/report/github.com/kubism/smorgasbord)
 [![Coverage Status](https://coveralls.io/repos/github/kubism/smorgasbord/badge.svg?branch=master)](https://coveralls.io/github/kubism/smorgasbord?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/b6fbe93e1b95f6b7f5e3/maintainability)](https://codeclimate.com/github/kubism/smorgasbord/maintainability)
 
 > a range of open sandwiches and delicacies served as hors d'oeuvres or a buffet
 
