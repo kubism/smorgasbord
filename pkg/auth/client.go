@@ -17,9 +17,11 @@ limitations under the License.
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/kubism/smorgasbord/pkg/util"
 
@@ -36,60 +38,67 @@ type Client struct {
 	token       string
 }
 
-func NewClient(baseURL string) (*Client, error) {
-	received := make(chan string, 1)
-	engine := gin.New()
-	engine.GET("/callback", func(c *gin.Context) {
-		token := c.Query(QueryTokenKey)
-		if token == "" {
-			c.String(http.StatusBadRequest, "Did not receive token")
-			return
-		}
-		c.String(http.StatusOK, "Successfully logged in navigate to terminal.")
-		received <- token
-	})
-	port, err := util.GetFreePort()
-	if err != nil {
-		return nil, err
-	}
-	server := &http.Server{
-		Addr:    fmt.Sprintf("127.0.0.1:%d", port),
-		Handler: engine,
-	}
-	serverLis, err := net.Listen("tcp", server.Addr)
-	if err != nil {
-		return nil, err
-	}
-	go func() {
-		if err := server.Serve(serverLis); err != http.ErrServerClosed {
-			panic(err)
-		}
-	}()
+func NewClient(baseURL string) *Client {
 	return &Client{
-		baseURL:     baseURL,
-		callbackURL: fmt.Sprintf("http://%s/callback", server.Addr),
+		baseURL: baseURL,
 		client: &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
 		},
-		server:    server,
-		serverLis: serverLis,
-		received:  received,
-	}, nil
+		received: make(chan string, 1),
+	}
+}
+
+func (c *Client) StartCallbackServer() error {
+	engine := gin.New()
+	engine.GET("/callback", func(g *gin.Context) {
+		token := g.Query(QueryTokenKey)
+		if token == "" {
+			g.String(http.StatusBadRequest, "Did not receive token")
+			return
+		}
+		g.String(http.StatusOK, "Successfully logged in navigate to terminal.")
+		c.received <- token
+	})
+	port, err := util.GetFreePort()
+	if err != nil {
+		return err
+	}
+	c.server = &http.Server{
+		Addr:    fmt.Sprintf("127.0.0.1:%d", port),
+		Handler: engine,
+	}
+	c.callbackURL = fmt.Sprintf("http://%s/callback", c.server.Addr)
+	c.serverLis, err = net.Listen("tcp", c.server.Addr)
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := c.server.Serve(c.serverLis); err != http.ErrServerClosed {
+			panic(err)
+		}
+	}()
+	return nil
+}
+
+func (c *Client) StopCallbackServer() error {
+	var err error
+	c.callbackURL = ""
+	if c.server != nil {
+		err = c.server.Shutdown(context.Background())
+		c.server = nil
+	}
+	if c.serverLis != nil {
+		_ = c.serverLis.Close()
+		c.serverLis = nil
+	}
+	return err
 }
 
 func (c *Client) Close() error {
 	close(c.received)
-	if c.server != nil {
-		if err := c.server.Close(); err != nil {
-			return err
-		}
-	}
-	if err := c.serverLis.Close(); err != nil {
-		return err
-	}
-	return nil
+	return c.StopCallbackServer()
 }
 
 func (c *Client) GetAuthCodeURL() (string, error) {
@@ -107,6 +116,16 @@ func (c *Client) GetAuthCodeURL() (string, error) {
 	return u.String(), nil
 }
 
-func (c *Client) WaitUntilReceived() {
-	c.token = <-c.received
+func (c *Client) WaitUntilReceived(timeout time.Duration) error {
+	select {
+	case t := <-c.received:
+		c.token = t
+	case <-time.After(timeout):
+		return fmt.Errorf("failed to receive token after %v", timeout)
+	}
+	return nil
+}
+
+func (c *Client) GetToken() string {
+	return c.token
 }

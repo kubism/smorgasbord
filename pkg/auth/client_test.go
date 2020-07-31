@@ -14,11 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package auth
+package auth_test
 
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,6 +37,10 @@ func simulateUserLoginInBrowser(authCodeURL string) {
 
 var _ = Describe("Client", func() {
 	It("can retrieve auth code URL", func() {
+		Expect(client.StartCallbackServer()).To(Succeed())
+		defer func() {
+			Expect(client.StopCallbackServer()).To(Succeed())
+		}()
 		authCodeURL, err := client.GetAuthCodeURL()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(authCodeURL).ToNot(Equal(""))
@@ -43,10 +48,12 @@ var _ = Describe("Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 	It("can log user in and retrieve token", func() {
+		Expect(client.StartCallbackServer()).To(Succeed())
 		authCodeURL, err := client.GetAuthCodeURL()
 		Expect(err).ToNot(HaveOccurred())
 		simulateUserLoginInBrowser(authCodeURL)
-		client.WaitUntilReceived()
-		Expect(client.token).ToNot(Equal(""))
+		Expect(client.WaitUntilReceived(5 * time.Second)).To(Succeed())
+		Expect(client.GetToken()).ToNot(Equal(""))
+		Expect(client.StopCallbackServer()).To(Succeed())
 	})
 })

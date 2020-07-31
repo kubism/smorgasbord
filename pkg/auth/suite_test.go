@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package auth
+package auth_test
 
 import (
 	"fmt"
@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	_ "github.com/kubism/smorgasbord/internal/flags"
+	"github.com/kubism/smorgasbord/pkg/auth"
 	"github.com/kubism/smorgasbord/pkg/testutil"
 	"github.com/kubism/smorgasbord/pkg/util"
 
@@ -37,8 +38,8 @@ var (
 	dex       *testutil.Dex
 	server    *http.Server
 	serverLis net.Listener
-	handler   *Handler
-	client    *Client
+	handler   *auth.Handler
+	client    *auth.Client
 )
 
 func TestAuth(t *testing.T) {
@@ -55,7 +56,7 @@ var _ = BeforeSuite(func(done Done) {
 	dex, err = testutil.NewDex(redirectURL)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(dex).ToNot(BeNil())
-	config := &HandlerConfig{
+	config := &auth.HandlerConfig{
 		ClientID:           testutil.DexClientID,
 		ClientSecret:       testutil.DexClientSecret,
 		IssuerURL:          dex.GetIssuerURL(),
@@ -64,13 +65,13 @@ var _ = BeforeSuite(func(done Done) {
 		Nonce:              "test",
 		OfflineAsScope:     true,
 	}
-	handler, err = NewHandler(config)
+	handler, err = auth.NewHandler(config)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(handler).ToNot(BeNil())
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(cors.Default())
-	Register(engine, handler)
+	auth.Register(engine, handler)
 	server = &http.Server{Addr: serverAddr, Handler: engine}
 	serverLis, err = net.Listen("tcp", serverAddr)
 	Expect(err).ToNot(HaveOccurred())
@@ -79,7 +80,7 @@ var _ = BeforeSuite(func(done Done) {
 			panic(err)
 		}
 	}()
-	client, err = NewClient(fmt.Sprintf("http://%s", serverAddr))
+	client = auth.NewClient(fmt.Sprintf("http://%s", serverAddr))
 	Expect(err).ToNot(HaveOccurred())
 	Expect(client).ToNot(BeNil())
 	close(done)
