@@ -8,11 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/coreos/go-oidc"
-	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 )
 
@@ -20,7 +18,12 @@ type State struct {
 	Callback string `form:"callback" json:"callback,omitempty"`
 }
 
-type Config struct {
+type ExtraClaims struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+}
+
+type HandlerConfig struct {
 	IssuerURL          string
 	OfflineAsScope     bool
 	ClientID           string
@@ -30,24 +33,14 @@ type Config struct {
 	AuthCodeURLMutator func(string) string
 }
 
-type ExtraClaims struct {
-	Email           string   `json:"email"`
-	EmailVerified   bool     `json:"email_verified"`
-	Groups          []string `json:"groups"`
-	FederatedClaims struct {
-		ConnectorID string `json:"connector_id"`
-		UserID      string `json:"user_id"`
-	} `json:"federated_claims"`
-}
-
 type Handler struct {
 	httpClient *http.Client
 	verifier   *oidc.IDTokenVerifier
 	provider   *oidc.Provider
-	config     *Config
+	config     *HandlerConfig
 }
 
-func NewHandler(config *Config) (*Handler, error) {
+func NewHandler(config *HandlerConfig) (*Handler, error) {
 	var err error
 	h := &Handler{
 		config:     config,
@@ -67,7 +60,7 @@ func NewHandler(config *Config) (*Handler, error) {
 		return nil, fmt.Errorf("failed to parse provider scopes_supported: %v", err)
 	}
 	if len(scopes.Supported) == 0 {
-		// scopes_supported is a "RECOMMENDED" discovery claim, not a required
+		// `scopes_supported` is a "RECOMMENDED" discovery claim, not a required
 		// one. If missing, assume that the provider follows the spec and has
 		// an "offline_access" scope.
 		h.config.OfflineAsScope = true
@@ -165,100 +158,6 @@ func (h *Handler) getOauth2Config(scopes []string) *oauth2.Config {
 
 func (h *Handler) clientContext(ctx context.Context) context.Context {
 	return oidc.ClientContext(ctx, h.httpClient)
-}
-
-func Register(r *gin.Engine, h *Handler) {
-	authGroup := r.Group("/auth")
-	authGroup.POST("/login", Login(h))
-	authGroup.GET("/login", Login(h))
-	authGroup.GET("/callback", Callback(h))
-	authGroup.POST("/callback", Callback(h))
-}
-
-func Login(h *Handler) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var state State
-		// Parse form data, check if everything was provided and also check if
-		// callback is a valid URL
-		err := c.Bind(&state)
-		if err != nil {
-			c.String(http.StatusBadRequest, "failed to bind json object", err)
-			return
-		}
-		// Redirect to authCodeURL if no error occured
-		authCodeURL, err := h.GetAuthCodeURL(&state)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "failed to acquire auth code url")
-		}
-		c.Redirect(http.StatusSeeOther, authCodeURL)
-	}
-}
-
-func Callback(h *Handler) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		err := c.Request.ParseForm()
-		if err != nil {
-			c.String(http.StatusInternalServerError, fmt.Sprintf("failed to parse request: %v", err))
-			return
-		}
-		ctx := c.Request.Context()
-
-		// Authorization redirect callback from OAuth2 auth flow.
-		if errMsg := c.Request.Form.Get("error"); errMsg != "" {
-			c.String(http.StatusBadRequest, errMsg+": "+c.Request.Form.Get("error_description"))
-			return
-		}
-		code := c.Request.Form.Get("code")
-		if code == "" {
-			c.String(http.StatusBadRequest, fmt.Sprintf("no code in request: %q", c.Request.Form))
-			return
-		}
-
-		encoded := c.Request.Form.Get("state")
-		if encoded == "" {
-			c.String(http.StatusBadRequest, fmt.Sprintf("no state in request: %q", c.Request.Form))
-			return
-		}
-
-		token, err := h.Exchange(ctx, code)
-		if err != nil {
-			c.String(http.StatusInternalServerError, fmt.Sprintf("failed to get token: %v", err))
-			return
-		}
-
-		state, _, err := h.VerifyStateAndClaims(ctx, token, encoded)
-		if err != nil {
-			c.String(http.StatusInternalServerError, fmt.Sprintf("failed to verify token: %v", err), err)
-			return
-		}
-
-		callbackURL, err := url.Parse(state.Callback)
-		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("error parsing url from state: %v", err))
-			return
-		}
-		err = addTokenToQuery(callbackURL, token)
-		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("failed to add token to query: %v", err))
-			return
-		}
-
-		c.Redirect(http.StatusSeeOther, callbackURL.String())
-	}
-}
-
-func addTokenToQuery(u *url.URL, token *oauth2.Token) error {
-	q, err := url.ParseQuery(u.RawQuery)
-	if err != nil {
-		return err
-	}
-	encoded, err := encode(token)
-	if err != nil {
-		return err
-	}
-	q.Add("token", encoded)
-	u.RawQuery = q.Encode()
-	return nil
 }
 
 func decode(encoded string, obj interface{}) error {

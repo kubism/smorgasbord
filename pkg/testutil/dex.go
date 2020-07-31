@@ -3,6 +3,7 @@ package testutil
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 )
 
 const (
+	DexClientID         = "smorgasbord"
 	DexClientSecret     = "ZXhhbXBsZS1hcHAtc2VjcmV0"
 	DexUserEmail        = "test@kubism.io"
 	DexUserPassword     = "password"
@@ -61,10 +63,11 @@ func (l *dexLog) Errorf(format string, args ...interface{}) {
 }
 
 type Dex struct {
-	server *http.Server
+	server    *http.Server
+	serverLis net.Listener
 }
 
-func NewDex(redirectURI string) (*Dex, error) {
+func NewDex(redirectURL string) (*Dex, error) {
 	port := GetFreePort()
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 	c := Config{
@@ -85,8 +88,8 @@ func NewDex(redirectURI string) (*Dex, error) {
 		},
 		StaticClients: []storage.Client{
 			{
-				ID:           "smorgasbord",
-				RedirectURIs: []string{redirectURI},
+				ID:           DexClientID,
+				RedirectURIs: []string{redirectURL},
 				Name:         "Smorgasbord",
 				Secret:       DexClientSecret,
 			},
@@ -135,12 +138,30 @@ func NewDex(redirectURI string) (*Dex, error) {
 		return nil, err
 	}
 	httpServer := &http.Server{Addr: c.Web.HTTP, Handler: handler}
+	httpServerLis, err := net.Listen("tcp", httpServer.Addr)
+	if err != nil {
+		return nil, err
+	}
 	go func() {
-		if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
+		if err := httpServer.Serve(httpServerLis); err != http.ErrServerClosed {
 			panic(err) // unexpected error. port in use?
 		}
 	}()
-	return &Dex{httpServer}, nil
+	return &Dex{httpServer, httpServerLis}, nil
+}
+
+func (d *Dex) GetAddr() string {
+	return d.server.Addr
+}
+
+func (d *Dex) GetIssuerURL() string {
+	return fmt.Sprintf("http://%s/dex", d.server.Addr)
+}
+
+func (d *Dex) GetAuthCodeURLMutator() func(string) string {
+	return func(url string) string {
+		return url + "&connector_id=mock"
+	}
 }
 
 func (d *Dex) Close() error {
