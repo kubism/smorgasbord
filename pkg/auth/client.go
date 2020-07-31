@@ -51,6 +51,9 @@ func NewClient(baseURL string) *Client {
 }
 
 func (c *Client) StartCallbackServer() error {
+	// NOTE: the callback server basically consists of three components, which
+	// will be cleaned up by StopCallbackServer:
+	// server, serverLis and callbackURL
 	engine := gin.New()
 	engine.GET("/callback", func(g *gin.Context) {
 		token := g.Query(QueryTokenKey)
@@ -82,26 +85,14 @@ func (c *Client) StartCallbackServer() error {
 	return nil
 }
 
-func (c *Client) StopCallbackServer() error {
-	var err error
-	c.callbackURL = ""
-	if c.server != nil {
-		err = c.server.Shutdown(context.Background())
-		c.server = nil
-	}
-	if c.serverLis != nil {
-		_ = c.serverLis.Close()
-		c.serverLis = nil
-	}
-	return err
-}
-
-func (c *Client) Close() error {
-	close(c.received)
-	return c.StopCallbackServer()
-}
-
+// GetAuthCodeURL will connect to the server and retrieve the URL, which
+// the client will be redirected to as part of the OIDC flow.
+// Make sure to start the callback server via StartCallbackServer first or
+// this function will return an error.
 func (c *Client) GetAuthCodeURL() (string, error) {
+	if c.callbackURL == "" {
+		return "", fmt.Errorf("callback URL not available, make sure to start the callback server first")
+	}
 	res, err := c.client.Get(fmt.Sprintf("%s/auth/login?callback=%s", c.baseURL, c.callbackURL))
 	if err != nil {
 		return "", err
@@ -116,7 +107,10 @@ func (c *Client) GetAuthCodeURL() (string, error) {
 	return u.String(), nil
 }
 
-func (c *Client) WaitUntilReceived(timeout time.Duration) error {
+// WaitUntilTokenReceived will block until either the token was received or
+// the timeout occurred. The token can only be received if the callback server
+// is running and the user is finishing the OIDC flow with his browser.
+func (c *Client) WaitUntilTokenReceived(timeout time.Duration) error {
 	select {
 	case t := <-c.received:
 		c.token = t
@@ -126,6 +120,30 @@ func (c *Client) WaitUntilReceived(timeout time.Duration) error {
 	return nil
 }
 
+// StopCallbackServer will shutdown the server, which receives the token by
+// being the final redirect as part of the OIDC flow.
+func (c *Client) StopCallbackServer() error {
+	var err error
+	c.callbackURL = ""
+	if c.server != nil {
+		err = c.server.Shutdown(context.Background())
+		c.server = nil
+	}
+	if c.serverLis != nil {
+		_ = c.serverLis.Close()
+		c.serverLis = nil
+	}
+	return err
+}
+
+// Close will clean all listeners and channels required by the Client.
+func (c *Client) Close() error {
+	close(c.received)
+	return c.StopCallbackServer()
+}
+
+// GetToken return the current value of the token. If the token has not been
+// retrieved, the value will be an empty string.
 func (c *Client) GetToken() string {
 	return c.token
 }

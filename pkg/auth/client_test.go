@@ -52,7 +52,7 @@ var _ = Describe("Client", func() {
 		authCodeURL, err := client.GetAuthCodeURL()
 		Expect(err).ToNot(HaveOccurred())
 		simulateUserLoginInBrowser(authCodeURL)
-		Expect(client.WaitUntilReceived(5 * time.Second)).To(Succeed())
+		Expect(client.WaitUntilTokenReceived(5 * time.Second)).To(Succeed())
 		Expect(client.GetToken()).ToNot(Equal(""))
 		Expect(client.StopCallbackServer()).To(Succeed())
 	})
