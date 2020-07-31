@@ -5,7 +5,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/kubism/smorgasbord/pkg/testutil"
+	"github.com/kubism/smorgasbord/pkg/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,8 +32,12 @@ func NewClient(baseURL string) (*Client, error) {
 		c.String(http.StatusOK, "Successfully logged in navigate to terminal.")
 		received <- token
 	})
+	port, err := util.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
 	server := &http.Server{
-		Addr:    fmt.Sprintf("127.0.0.1:%d", testutil.GetFreePort()),
+		Addr:    fmt.Sprintf("127.0.0.1:%d", port),
 		Handler: engine,
 	}
 	serverLis, err := net.Listen("tcp", server.Addr)

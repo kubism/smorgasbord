@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kubism/smorgasbord/internal/flags"
+	"github.com/kubism/smorgasbord/pkg/util"
 
 	"github.com/dexidp/dex/server"
 	"github.com/dexidp/dex/storage"
@@ -68,7 +69,10 @@ type Dex struct {
 }
 
 func NewDex(redirectURL string) (*Dex, error) {
-	port := GetFreePort()
+	port, err := util.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 	c := Config{
 		Issuer: fmt.Sprintf("http://%s/dex", addr),

@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/kubism/smorgasbord/internal/flags"
 	"github.com/kubism/smorgasbord/pkg/testutil"
+	"github.com/kubism/smorgasbord/pkg/util"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -31,7 +32,8 @@ func TestAuth(t *testing.T) {
 
 var _ = BeforeSuite(func(done Done) {
 	var err error
-	serverPort := testutil.GetFreePort()
+	serverPort, err := util.GetFreePort()
+	Expect(err).ToNot(HaveOccurred())
 	serverAddr := fmt.Sprintf("127.0.0.1:%d", serverPort)
 	redirectURL := fmt.Sprintf("http://%s/auth/callback", serverAddr)
 	dex, err = testutil.NewDex(redirectURL)

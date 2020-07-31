@@ -1,18 +1,18 @@
-package testutil
+package util
 
 import (
 	"net"
 )
 
-func GetFreePort() int {
+func GetFreePort() (int, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 	l, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port
+	return l.Addr().(*net.TCPAddr).Port, nil
 }

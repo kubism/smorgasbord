@@ -1,4 +1,4 @@
-package testutil
+package util
 
 import (
 	"net"
@@ -10,7 +10,8 @@ import (
 
 var _ = Describe("GetFreePort", func() {
 	It("gets free port", func() {
-		port := GetFreePort()
+		port, err := GetFreePort()
+		Expect(err).ToNot(HaveOccurred())
 		Expect(port).To(BeNumerically(">", 0))
 		l, err := net.Listen("tcp", "localhost"+":"+strconv.Itoa(port))
 		Expect(err).ToNot(HaveOccurred())
