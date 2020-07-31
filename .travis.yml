@@ -1,0 +1,30 @@
+language: go
+dist: xenial
+os: linux
+go:
+- 1.14.x
+services:
+- docker
+cache:
+  directories:
+  - "$HOME/.cache/go-build"
+  - "$HOME/gopath/pkg/mod"
+git:
+  depth: false
+stages:
+- name: lint and test
+jobs:
+  include:
+  - stage: lint and test
+    name: run tests
+    script:
+    - make test
+    after_success:
+    - make coverage
+  - stage: lint and test
+    name: lint code
+    script:
+    - make lint
+env:
+  global:
+    secure: S//K+w2RdwjCJv9mRuk41ZIcznB3IJg3mgdEyLY1AKTuR4D6VT8NO29fvPO+DVmLpQn6ZIlSxjiqfq/h41qQcRr8Mo3yVDhwNRh4KBh+pJ0nuJvY77WcyYcMVW4G5yfOYif27UYQGkuyBDLZ1L+jLURa5C8AeJJjZhOQ/Ce9DJ4AVJ43wzuttGzSwaPHxhGO8WbqPUZxTzm22yOu2asHLnwhV1plest9QbVGQM0qTqcMZB7Q9S2ULduqg2siNRBIuENjOgn7xg2h4cARwSDrT3UKPP+idPBK6o5Z00r69AdARd/XascBgvEmpNyRoWSJ5c++tM8Z8p9B1PO8F6TXq6zNSM4n6n0IeJ6PwE7xzvLoa6FlL0OmtcqWbjTBhnpcb2G0DYZVwf+44avN5+KYO5zwV6Mo4Rc9DiT7Mbs0hPsEEa7qAJLZXoreIybHrgze/LP6lT3nDmM8C6/oIcndWB7d78u1Hec7c3BjaMRPOuNyx+ECs9Rq4vrkQDJ5rjOoqnq1HO6f/ELlyxQAthDmMXFmt6dlnwvF+nwVk1XFHUm5Q2Rt6cEkdyZEhb16rrm3ePaUc+2ZlsFPlNnNYgbfGOXK7KJGKyjQjPcKFiGbkGPeiT98z/tJ8/9Szo2aXZR3LHYCPNN4rZ6qEhsdcsRu1FbQvujI/cIHalLFHLrQIes=
