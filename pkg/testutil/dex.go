@@ -113,10 +113,7 @@ func NewDex(redirectURI string) (*Dex, error) {
 		},
 	}
 	log := &dexLog{func(string, ...interface{}) {}}
-	s, err := c.Storage.Config.Open(log)
-	if err != nil {
-		return nil, err
-	}
+	s, _ := c.Storage.Config.Open(log)
 	s = storage.WithStaticClients(s, c.StaticClients)
 	s = storage.WithStaticPasswords(s, c.StaticPasswords, log)
 	s = storage.WithStaticConnectors(s, c.StaticConnectors)
