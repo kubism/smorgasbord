@@ -3,6 +3,8 @@ package testutil
 import (
 	"testing"
 
+	_ "github.com/kubism/smorgasbord/internal/flags"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

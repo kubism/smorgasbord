@@ -5,11 +5,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("LDAP", func() {
+var _ = Describe("Dex", func() {
 	It("is created successfully", func() {
-		ldap, err := NewLDAP()
+		dex, err := NewDex("test")
 		Expect(err).ToNot(HaveOccurred())
-		defer ldap.Close()
-		Expect(ldap).ToNot(BeNil())
+		defer dex.Close()
+		Expect(dex).ToNot(BeNil())
 	})
 })

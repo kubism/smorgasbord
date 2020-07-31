@@ -2,6 +2,8 @@ SHELL := bash
 
 # Directory, where all required tools are located (absolute path required)
 TOOLS_DIR ?= $(shell cd tools && pwd)
+# Assets for dex to successfully run tests
+DEX_WEB_DIR ?= $(shell cd web && pwd)
 
 # Prerequisite tools
 GO ?= go
@@ -17,11 +19,11 @@ GOVER ?= $(TOOLS_DIR)/gover
 .PHONY: test lint fmt vet
 
 test: fmt vet $(GINKGO)
-	$(GINKGO) -r -v -cover pkg -- $(TEST_FLAGS)
+	$(GINKGO) -r -v -cover pkg -- -dex-web-dir=$(DEX_WEB_DIR) $(TEST_FLAGS)
 
 
 test-%: fmt vet $(GINKGO)
-	$(GINKGO) -r -v -cover pkg/$* -- $(TEST_FLAGS)
+	$(GINKGO) -r -v -cover pkg/$* -- -dex-web-dir=$(DEX_WEB_DIR) $(TEST_FLAGS)
 
 # First run gover to merge the coverprofiles and upload to coveralls
 coverage: $(GOVERALLS) $(GOVER)
