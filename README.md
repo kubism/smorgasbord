@@ -1,5 +1,10 @@
 # Smorgasbord
 
+[![Go Documentation](https://img.shields.io/badge/go-doc-blue.svg?style=flat)](https://pkg.go.dev/github.com/kubism/smorgasbord/pkg)
+[![Build Status](https://travis-ci.org/kubism/smorgasbord.svg?branch=master)](https://travis-ci.org/kubism/smorgasbord)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubism/smorgasbord)](https://goreportcard.com/report/github.com/kubism/smorgasbord)
+[![Coverage Status](https://coveralls.io/repos/github/kubism/smorgasbord/badge.svg?branch=master)](https://coveralls.io/github/kubism/smorgasbord?branch=master)
+
 > a range of open sandwiches and delicacies served as hors d'oeuvres or a buffet
 
 Smorgasbord purpose is to ease up the administration of a wireguard-based VPN.  
