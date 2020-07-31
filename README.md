@@ -1,4 +1,4 @@
 # Smorgasbord
 
-![Concept of Smorgasbord](./docs/concept.svg.drawio)
+![Concept of Smorgasbord](./docs/concept.svg)
 
