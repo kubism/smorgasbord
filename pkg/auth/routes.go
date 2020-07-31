@@ -45,7 +45,7 @@ func Login(h *Handler) gin.HandlerFunc {
 			c.String(http.StatusBadRequest, "failed to bind json object", err)
 			return
 		}
-		// Redirect to authCodeURL if no error occured
+		// Redirect to authCodeURL if no error occurred
 		authCodeURL, err := h.GetAuthCodeURL(&state)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "failed to acquire auth code url")
