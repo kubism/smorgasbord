@@ -23,8 +23,6 @@ const (
 
 type DebugLog = func(string, ...interface{})
 
-// Simplified logger implementation to run dex in tests
-
 type dexLog struct {
 	log DebugLog
 }
@@ -62,8 +60,6 @@ func (l *dexLog) Errorf(format string, args ...interface{}) {
 	l.log("ERROR: " + fmt.Sprintf(format, args...))
 }
 
-// args
-
 type Dex struct {
 	server *http.Server
 }
@@ -78,10 +74,14 @@ func NewDex(redirectURI string) (*Dex, error) {
 			Config: &memory.Config{},
 		},
 		Web: Web{
-			HTTP: addr,
+			AllowedOrigins: []string{"*"},
+			HTTP:           addr,
 		},
 		Frontend: server.WebConfig{
 			Dir: flags.DexWebDir,
+		},
+		OAuth2: OAuth2{
+			SkipApprovalScreen: true,
 		},
 		StaticClients: []storage.Client{
 			{

@@ -6,18 +6,14 @@ import (
 	"github.com/dexidp/dex/pkg/log"
 	"github.com/dexidp/dex/server"
 	"github.com/dexidp/dex/storage"
-	"github.com/dexidp/dex/storage/memory"
 )
 
 // Config is the config format for the main application.
 type Config struct {
-	Issuer    string    `json:"issuer"`
-	Storage   Storage   `json:"storage"`
-	Web       Web       `json:"web"`
-	Telemetry Telemetry `json:"telemetry"`
-	OAuth2    OAuth2    `json:"oauth2"`
-	Expiry    Expiry    `json:"expiry"`
-	Logger    Logger    `json:"logger"`
+	Issuer  string  `json:"issuer"`
+	Storage Storage `json:"storage"`
+	Web     Web     `json:"web"`
+	OAuth2  OAuth2  `json:"oauth2"`
 
 	Frontend server.WebConfig `json:"frontend"`
 
@@ -56,11 +52,6 @@ type Web struct {
 	AllowedOrigins []string `json:"allowedOrigins"`
 }
 
-// Telemetry is the config format for telemetry including the HTTP server config.
-type Telemetry struct {
-	HTTP string `json:"http"`
-}
-
 // Storage holds app's storage configuration.
 type Storage struct {
 	Type   string        `json:"type"`
@@ -70,29 +61,4 @@ type Storage struct {
 // StorageConfig is a configuration that can create a storage.
 type StorageConfig interface {
 	Open(logger log.Logger) (storage.Storage, error)
-}
-
-var storages = map[string]func() StorageConfig{
-	"memory": func() StorageConfig { return new(memory.Config) },
-}
-
-// Expiry holds configuration for the validity period of components.
-type Expiry struct {
-	// SigningKeys defines the duration of time after which the SigningKeys will be rotated.
-	SigningKeys string `json:"signingKeys"`
-
-	// IdTokens defines the duration of time for which the IdTokens will be valid.
-	IDTokens string `json:"idTokens"`
-
-	// AuthRequests defines the duration of time for which the AuthRequests will be valid.
-	AuthRequests string `json:"authRequests"`
-}
-
-// Logger holds configuration required to customize logging for dex.
-type Logger struct {
-	// Level sets logging level severity.
-	Level string `json:"level"`
-
-	// Format specifies the format to be used for logging.
-	Format string `json:"format"`
 }
