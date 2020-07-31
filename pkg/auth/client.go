@@ -22,7 +22,7 @@ type Client struct {
 
 func NewClient(baseURL string) (*Client, error) {
 	received := make(chan string, 1)
-	engine := gin.Default()
+	engine := gin.New()
 	engine.GET("/callback", func(c *gin.Context) {
 		token := c.Query(QueryTokenKey)
 		if token == "" {

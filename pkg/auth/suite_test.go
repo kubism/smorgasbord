@@ -49,7 +49,8 @@ var _ = BeforeSuite(func(done Done) {
 	handler, err = NewHandler(config)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(handler).ToNot(BeNil())
-	engine := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.New()
 	engine.Use(cors.Default())
 	Register(engine, handler)
 	server = &http.Server{Addr: serverAddr, Handler: engine}
@@ -57,7 +58,7 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	go func() {
 		if err := server.Serve(serverLis); err != http.ErrServerClosed {
-			panic(err) // unexpected error. port in use?
+			panic(err)
 		}
 	}()
 	client, err = NewClient(fmt.Sprintf("http://%s", serverAddr))
