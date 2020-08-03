@@ -95,12 +95,12 @@ func newServerCmd(out io.Writer) *cobra.Command {
 			server := &http.Server{Addr: addr, Handler: engine}
 			log.Info().Str("addr", addr).Msg("starting listener")
 			serverLis, err := net.Listen("tcp", addr)
-			defer func() {
-				_ = serverLis.Close()
-			}()
 			if err != nil {
 				return err
 			}
+			defer func() {
+				_ = serverLis.Close()
+			}()
 			go func() { // Start listening
 				log.Info().Msg("server starting")
 				if err := server.Serve(serverLis); err != http.ErrServerClosed {
