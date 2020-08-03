@@ -21,6 +21,16 @@ as more complex installments.
 
 ![Concept of Smorgasbord](./docs/concept.svg)
 
+## Future
+
+### Automatic removal
+
+Currently it is required to manage the removal/deactivation of users manually,
+e.g. admin removing entries from git repository.
+
+However if the information about the deactivation is available via OIDC, e.g.
+refresh token failing. It would be possible to deactivate users automatically.
+
 ## About the name
 
 This project started a late night project and the name was essentially what
