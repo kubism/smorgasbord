@@ -14,18 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testutil
+package main
 
 import (
-	"testing"
-
-	_ "github.com/kubism/smorgasbord/internal/flags"
+	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func TestTestutil(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "pkg/testutil")
-}
+var _ = Describe("Server", func() {
+	It("can start with valid parameters", func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		output, err := executeCommandWithContext(ctx, newServerCmd, validServerArgs()...)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(output).ToNot(Equal(""))
+	})
+	It("fails without proper flags", func() {
+		_, err := executeCommandWithContext(context.Background(), newServerCmd)
+		Expect(err).To(HaveOccurred())
+	})
+})

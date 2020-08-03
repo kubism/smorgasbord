@@ -39,7 +39,7 @@ clean:
 	rm -f $(CMD_SMORGASBORD)
 
 test: fmt vet $(GINKGO)
-	$(GINKGO) -r -v -cover pkg -- -dex-web-dir=$(DEX_WEB_DIR) $(TEST_FLAGS)
+	$(GINKGO) -r -v -cover . -- -dex-web-dir=$(DEX_WEB_DIR) $(TEST_FLAGS)
 
 
 test-%: fmt vet $(GINKGO)

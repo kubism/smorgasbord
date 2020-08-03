@@ -27,7 +27,6 @@ import (
 	"github.com/kubism/smorgasbord/pkg/testutil"
 	"github.com/kubism/smorgasbord/pkg/util"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	. "github.com/onsi/ginkgo"
@@ -44,7 +43,7 @@ var (
 
 func TestAuth(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "auth")
+	RunSpecs(t, "pkg/auth")
 }
 
 var _ = BeforeSuite(func(done Done) {
@@ -70,7 +69,6 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(handler).ToNot(BeNil())
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
-	engine.Use(cors.Default())
 	auth.Register(engine, handler)
 	server = &http.Server{Addr: serverAddr, Handler: engine}
 	serverLis, err = net.Listen("tcp", serverAddr)

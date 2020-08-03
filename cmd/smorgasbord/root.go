@@ -17,24 +17,23 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
+	"os/signal"
+	"syscall"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	// Setup global flags
-
-}
-
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	rootCmd := &cobra.Command{
-		Use:          "smorgasbord action [flags]",
-		Short:        "Smorgasbord is a self-service tool for wireguard users.",
-		Long:         `Smorgasbord is a self-service tool for wireguard users.`,
-		SilenceUsage: true,
+		Use:   "smorgasbord action [flags]",
+		Short: "Smorgasbord is a self-service tool for wireguard users.",
+		Long:  `Smorgasbord is a self-service tool for wireguard users.`,
 	}
 	flags := rootCmd.PersistentFlags()
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -42,8 +41,16 @@ func main() {
 	rootCmd.AddCommand(versionCmd)
 	serverCmd := newServerCmd(os.Stdout)
 	rootCmd.AddCommand(serverCmd)
-	if err := rootCmd.Execute(); err != nil {
-		log.WithError(err).Error("command failed")
+	// Make sure to cancel the context if a signal was received
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		log.Warn().Str("signal", sig.String()).Msg("received signal")
+		cancel()
+	}()
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
+		log.Error().Err(err).Msg("command failed")
 		os.Exit(1)
 	}
 }

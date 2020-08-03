@@ -29,12 +29,23 @@ var (
 )
 
 func newVersionCmd(out io.Writer) *cobra.Command {
-	return &cobra.Command{
+	var json bool
+
+	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Prints version information",
-		Long:  `Prints version information and the commit`,
+		Short: "Prints version information.",
+		Long:  `Prints version information and the commit.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(out, "smorgasbord\nversion: %s commit: %s\n", version, commit)
+			if json {
+				fmt.Fprintf(out, `{ "app": "smorgasbord", "version": "%s", "commit": "%s" }`, version, commit)
+			} else {
+				fmt.Fprintf(out, "smorgasbord\nversion: %s commit: %s\n", version, commit)
+			}
 		},
 	}
+
+	flags := cmd.Flags()
+	flags.BoolVar(&json, "json", false, "Whether to log version and commit as json.")
+
+	return cmd
 }

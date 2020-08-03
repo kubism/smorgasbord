@@ -27,5 +27,5 @@ import (
 
 func TestUtil(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "util")
+	RunSpecs(t, "pkg/util")
 }
