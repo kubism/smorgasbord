@@ -63,7 +63,7 @@ var _ = BeforeSuite(func(done Done) {
 		AuthCodeURLMutator: dex.GetAuthCodeURLMutator(),
 		RedirectURL:        redirectURL,
 		Nonce:              "test",
-		OfflineAsScope:     true,
+		OfflineAsScope:     false,
 	}
 	handler, err = auth.NewHandler(config)
 	Expect(err).ToNot(HaveOccurred())
