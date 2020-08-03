@@ -21,4 +21,10 @@ as more complex installments.
 
 ![Concept of Smorgasbord](./docs/concept.svg)
 
+## About the name
+
+This project started a late night project and the name was essentially what
+came up first after googling "synonym self-service".
+It might therefore be subject to change.
+
 
