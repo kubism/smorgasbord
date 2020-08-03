@@ -17,24 +17,27 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
 )
 
-var (
-	version string = "DEV"
-	commit  string = "DEBUG"
-)
+func newServerCmd(out io.Writer) *cobra.Command {
+	var (
+		addr string
+	)
 
-func newVersionCmd(out io.Writer) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Prints version information",
 		Long:  `Prints version information and the commit`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(out, "smorgasbord\nversion: %s commit: %s\n", version, commit)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return nil
 		},
 	}
+
+	flags := cmd.Flags()
+	flags.StringVarP(&addr, "addr", "a", "0.0.0.0:8080", "which address the server will listen on")
+
+	return cmd
 }

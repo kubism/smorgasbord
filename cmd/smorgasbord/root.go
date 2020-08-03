@@ -24,20 +24,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:          "smorgasbord action [flags]",
-	Short:        "Smorgasbord is a self-service tool for wireguard users.",
-	Long:         `Smorgasbord is a self-service tool for wireguard users.`,
-	SilenceUsage: true,
-}
-
 func init() {
 	// Setup global flags
-	flags := rootCmd.PersistentFlags()
-	flags.AddGoFlagSet(flag.CommandLine)
+
 }
 
 func main() {
+	rootCmd := &cobra.Command{
+		Use:          "smorgasbord action [flags]",
+		Short:        "Smorgasbord is a self-service tool for wireguard users.",
+		Long:         `Smorgasbord is a self-service tool for wireguard users.`,
+		SilenceUsage: true,
+	}
+	flags := rootCmd.PersistentFlags()
+	flags.AddGoFlagSet(flag.CommandLine)
+	versionCmd := newVersionCmd(os.Stdout)
+	rootCmd.AddCommand(versionCmd)
+	serverCmd := newServerCmd(os.Stdout)
+	rootCmd.AddCommand(serverCmd)
 	if err := rootCmd.Execute(); err != nil {
 		log.WithError(err).Error("command failed")
 		os.Exit(1)
