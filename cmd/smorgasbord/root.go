@@ -37,6 +37,7 @@ func main() {
 	}
 	flags := rootCmd.PersistentFlags()
 	flags.AddGoFlagSet(flag.CommandLine)
+	// Add all sub-commands
 	versionCmd := newVersionCmd(os.Stdout)
 	rootCmd.AddCommand(versionCmd)
 	serverCmd := newServerCmd(os.Stdout)
