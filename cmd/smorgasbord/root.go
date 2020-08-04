@@ -41,6 +41,8 @@ func main() {
 	rootCmd.AddCommand(versionCmd)
 	serverCmd := newServerCmd(os.Stdout)
 	rootCmd.AddCommand(serverCmd)
+	setupCmd := newSetupCmd(os.Stdout)
+	rootCmd.AddCommand(setupCmd)
 	// Make sure to cancel the context if a signal was received
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

@@ -21,6 +21,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	_ "github.com/kubism/smorgasbord/internal/flags"
@@ -37,6 +40,7 @@ var (
 	dex         *testutil.Dex
 	serverAddr  string
 	redirectURL string
+	tmpDir      string // Used to store temporary config for CLI, e.g. setup command
 )
 
 func TestSmorgasbord(t *testing.T) {
@@ -53,12 +57,17 @@ var _ = BeforeSuite(func(done Done) {
 	dex, err = testutil.NewDex(redirectURL)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(dex).ToNot(BeNil())
+	tmpDir, err = ioutil.TempDir("", "smorgasbord")
+	Expect(err).ToNot(HaveOccurred())
 	close(done)
 }, 240)
 
 var _ = AfterSuite(func() {
 	if dex != nil {
 		_ = dex.Close()
+	}
+	if tmpDir != "" {
+		_ = os.RemoveAll(tmpDir)
 	}
 })
 
@@ -82,5 +91,11 @@ func validServerArgs() []string {
 		"--auth-code-url-appendix=\"&connector_id=mock\"",
 		"--nonce=test",
 	}
+}
 
+func validSetupArgs() []string {
+	return []string{
+		fmt.Sprintf("--config=%s", filepath.Join(tmpDir, "config")),
+		fmt.Sprintf("--base-url=http://%s", serverAddr),
+	}
 }
