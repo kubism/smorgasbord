@@ -21,7 +21,10 @@ as more complex installments.
 
 ![Concept of Smorgasbord](./docs/concept.svg)
 
-## Future
+## Backlog topics
+
+The backlog contains some bigger topics, which we might implement in the future.
+However feel free to implement them yourself you need them.
 
 ### Automatic removal
 
@@ -30,6 +33,11 @@ e.g. admin removing entries from git repository.
 
 However if the information about the deactivation is available via OIDC, e.g.
 refresh token failing. It would be possible to deactivate users automatically.
+
+### Configure wireguard directly
+
+Rather than provide the configuration and issuing a command (e.g. `wg syncconf`)
+the agent could configure wireguard interface directly using the [go library](https://github.com/WireGuard/wgctrl-go).
 
 ## About the name
 
