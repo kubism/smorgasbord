@@ -54,8 +54,7 @@ func newSetupCmd(out io.Writer) *cobra.Command {
 				return fmt.Errorf("Failed to load configuration: %w", err)
 			}
 			c.BaseURL = baseURL
-			err = c.Save()
-			if err != nil {
+			if err := c.Save(); err != nil {
 				return fmt.Errorf("Failed to save configuration: %w", err)
 			}
 			log.Info().Str("config", config).Msg("Wrote changes to configuration")

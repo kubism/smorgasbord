@@ -22,9 +22,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	_ "github.com/kubism/smorgasbord/internal/flags"
 	"github.com/kubism/smorgasbord/pkg/testutil"
@@ -88,7 +90,7 @@ func validServerArgs() []string {
 		fmt.Sprintf("--client-secret=%s", testutil.DexClientSecret),
 		fmt.Sprintf("--issuer-url=%s", dex.GetIssuerURL()),
 		fmt.Sprintf("--redirect-url=%s", redirectURL),
-		"--auth-code-url-appendix=\"&connector_id=mock\"",
+		"--auth-code-url-appendix=&connector_id=mock",
 		"--nonce=test",
 	}
 }
@@ -97,5 +99,28 @@ func validSetupArgs() []string {
 	return []string{
 		fmt.Sprintf("--config=%s", filepath.Join(tmpDir, "config")),
 		fmt.Sprintf("--base-url=http://%s", serverAddr),
+	}
+}
+
+func validLoginArgs() []string {
+	return []string{
+		fmt.Sprintf("--config=%s", filepath.Join(tmpDir, "config")),
+	}
+}
+
+func waitUntilServerReady() error {
+	timeout := time.After(5 * time.Second)
+	tick := time.Tick(500 * time.Millisecond)
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("timed out")
+		case <-tick:
+			conn, err := net.DialTimeout("tcp", serverAddr, time.Second)
+			if err == nil {
+				defer conn.Close()
+				return nil
+			}
+		}
 	}
 }

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/kubism/smorgasbord/pkg/util"
 
@@ -108,14 +107,14 @@ func (c *Client) GetAuthCodeURL() (string, error) {
 }
 
 // WaitUntilTokenReceived will block until either the token was received or
-// the timeout occurred. The token can only be received if the callback server
+// the context is done. The token can only be received if the callback server
 // is running and the user is finishing the OIDC flow with his browser.
-func (c *Client) WaitUntilTokenReceived(timeout time.Duration) error {
+func (c *Client) WaitUntilTokenReceived(ctx context.Context) error {
 	select {
 	case t := <-c.received:
 		c.token = t
-	case <-time.After(timeout):
-		return fmt.Errorf("failed to receive token after %v", timeout)
+	case <-ctx.Done():
+		return fmt.Errorf("failed to receive token before context done")
 	}
 	return nil
 }

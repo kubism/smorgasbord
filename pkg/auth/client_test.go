@@ -17,6 +17,7 @@ limitations under the License.
 package auth_test
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -52,7 +53,9 @@ var _ = Describe("Client", func() {
 		authCodeURL, err := client.GetAuthCodeURL()
 		Expect(err).ToNot(HaveOccurred())
 		simulateUserLoginInBrowser(authCodeURL)
-		Expect(client.WaitUntilTokenReceived(5 * time.Second)).To(Succeed())
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		Expect(client.WaitUntilTokenReceived(ctx)).To(Succeed())
 		Expect(client.GetToken()).ToNot(Equal(""))
 		Expect(client.StopCallbackServer()).To(Succeed())
 	})
