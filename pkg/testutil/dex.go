@@ -185,5 +185,6 @@ func (d *Dex) GetAuthCodeURLMutator() func(string) string {
 }
 
 func (d *Dex) Close() error {
-	return d.server.Close()
+	_ = d.server.Close()
+	return d.serverLis.Close()
 }

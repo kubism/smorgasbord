@@ -8,6 +8,8 @@ require (
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/logger v0.0.2
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-git/go-billy/v5 v5.0.0
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4

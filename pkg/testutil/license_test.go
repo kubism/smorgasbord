@@ -45,6 +45,7 @@ limitations under the License.
 
 var skip = map[string]bool{
 	"../../pkg/testutil/dex_config.go": true,
+	"../../pkg/testutil/gitserver.go":  true,
 }
 
 var _ = Describe("License", func() {
