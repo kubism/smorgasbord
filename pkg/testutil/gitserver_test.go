@@ -34,7 +34,7 @@ import (
 )
 
 var _ = Describe("GitServer", func() {
-	It("is created successfully and repo is functional", func() {
+	It("list contains entry", func() {
 		dir, err := ioutil.TempDir("", "smorgasbord")
 		Expect(err).ToNot(HaveOccurred())
 		defer os.RemoveAll(dir)
