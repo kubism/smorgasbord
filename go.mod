@@ -3,8 +3,10 @@ module github.com/kubism/smorgasbord
 go 1.14
 
 require (
+	github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dexidp/dex v0.0.0-20200723174616-19cd9cc65cc9
+	github.com/getlantern/systray v1.0.4
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/logger v0.0.2
 	github.com/gin-gonic/gin v1.6.3
