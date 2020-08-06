@@ -18,7 +18,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"github.com/kubism/smorgasbord/pkg/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,6 +31,13 @@ var _ = Describe("Server", func() {
 	It("can start with valid parameters", func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
+		// Use different port to test whether server can start to avoid clashing
+		// with client test
+		port, err := util.GetFreePort()
+		Expect(err).ToNot(HaveOccurred())
+		addr := fmt.Sprintf("127.0.0.1:%d", port)
+		args := validServerArgs()
+		args[0] = fmt.Sprintf("--addr=%s", addr)
 		output, err := executeCommandWithContext(ctx, newServerCmd, validServerArgs()...)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(output).ToNot(Equal(""))
