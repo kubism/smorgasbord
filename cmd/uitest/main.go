@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/kubism/smorgasbord/assets/icon"
 
@@ -10,8 +14,52 @@ import (
 	"github.com/getlantern/systray"
 )
 
+// TODO: well next... maybe os.Process is nicer?
+
+var children = []int{}
+
+var mainwin *ui.Window
+
 func main() {
-	systray.Run(onReady, onExit)
+	pid := os.Getpid()
+	ppid := os.Getppid()
+	fmt.Printf("pid: %d, ppid: %d, args: %s\n", pid, ppid, os.Args)
+	// handle exit for every process and check if child is dead
+	go func() {
+		sig := make(chan os.Signal)
+		signal.Notify(sig)
+		for s := range sig {
+			// see https://u.kfd.me/33
+			// SIGINT means graceful stop
+			// SIGTERM means graceful [or not], cleanup something
+			// SIGQUIT SIGKILL means immediately shutdown
+			if s == syscall.SIGCHLD {
+				children = []int{}
+			}
+			if s == syscall.SIGQUIT || s == syscall.SIGTERM {
+				log.Printf("[%d] exit\n", pid)
+				// make sure that parent can send signals to the children
+				for _, child := range children {
+					log.Printf("parent send %s to %d", s, child)
+					syscall.Kill(child, s.(syscall.Signal))
+				}
+				ui.QueueMain(func() {
+					ui.Quit()
+				})
+				syscall.Exit(0)
+			}
+		}
+	}()
+	// only the parent process can do
+	if _, isChild := os.LookupEnv("CHILD_ID"); !isChild {
+		systray.Run(onReady, onExit)
+		for _, child := range children {
+			log.Printf("parent send %s to %d", syscall.SIGQUIT, child)
+			syscall.Kill(child, syscall.SIGQUIT)
+		}
+	} else {
+		ui.Main(setup)
+	}
 }
 
 func onReady() {
@@ -33,23 +81,38 @@ func onReady() {
 					checked.SetTitle("Checked")
 				}
 			case <-open.ClickedCh:
-				fmt.Println("open")
-				if mainwin == nil {
-					go func() {
-						ui.Main(setupUI)
-						fmt.Println("end")
-						// mainwin = nil
-					}()
+				fmt.Println("tray.open")
+				if len(children) > 0 {
+					fmt.Println("tray.checkchildren")
+					if syscall.Kill(children[0], syscall.SIGHUP) != nil {
+						fmt.Println("tray.childdead")
+						children = []int{}
+					}
+				}
+				if len(children) == 0 { // well yes requires work...
+					args := append(os.Args, fmt.Sprintf("#child_%d_of_%d", 1, os.Getpid()))
+					childENV := []string{
+						fmt.Sprintf("CHILD_ID=%d", 1),
+					}
+					pwd, err := os.Getwd()
+					if err != nil {
+						log.Fatalf("getwd err: %s", err)
+					}
+					childPID, _ := syscall.ForkExec(args[0], args, &syscall.ProcAttr{
+						Dir: pwd,
+						Env: append(os.Environ(), childENV...),
+						Sys: &syscall.SysProcAttr{
+							Setsid: true,
+						},
+						Files: []uintptr{0, 1, 2}, // print message to the same pty
+					})
+					log.Printf("parent %d fork %d", os.Getpid(), childPID)
+					if childPID != 0 {
+						children = append(children, childPID)
+					}
 				}
 			case <-quit.ClickedCh:
-				fmt.Println("quit")
-				ui.QueueMain(func() {
-					ui.Quit()
-					mainwin.Destroy()
-				})
-				// if mainwin != nil {
-				// 	mainwin.Destroy()
-				// }
+				fmt.Println("tray.quit")
 				systray.Quit()
 				return
 			}
@@ -59,8 +122,6 @@ func onReady() {
 
 func onExit() {
 }
-
-var mainwin *ui.Window
 
 func makeBasicControlsPage() ui.Control {
 	vbox := ui.NewVerticalBox()
@@ -242,10 +303,11 @@ func makeDataChoosersPage() ui.Control {
 	return hbox
 }
 
-func setupUI() {
+func setup() {
 	mainwin = ui.NewWindow("libui Control Gallery", 640, 480, true)
 	mainwin.OnClosing(func(*ui.Window) bool {
 		fmt.Println("onclosing")
+		syscall.Kill(os.Getppid(), syscall.SIGCHLD)
 		ui.Quit()
 		return true
 	})
