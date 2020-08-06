@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -33,10 +32,10 @@ func main() {
 				children = []int{}
 			}
 			if s == syscall.SIGQUIT || s == syscall.SIGTERM {
-				log.Printf("[%d] exit\n", pid)
+				fmt.Printf("[%d] exit\n", pid)
 				// make sure that parent can send signals to the children
 				for _, child := range children {
-					log.Printf("parent send %s to %d", s, child)
+					fmt.Printf("parent send %s to %d\n", s, child)
 					syscall.Kill(child, s.(syscall.Signal))
 				}
 				ui.QueueMain(func() {
@@ -50,7 +49,7 @@ func main() {
 	if _, isChild := os.LookupEnv("CHILD_ID"); !isChild {
 		systray.Run(onReady, onExit)
 		for _, child := range children {
-			log.Printf("parent send %s to %d", syscall.SIGQUIT, child)
+			fmt.Printf("parent send %s to %d\n", syscall.SIGQUIT, child)
 			syscall.Kill(child, syscall.SIGQUIT)
 		}
 	} else {
@@ -93,7 +92,8 @@ func onReady() {
 					}
 					pwd, err := os.Getwd()
 					if err != nil {
-						log.Fatalf("getwd err: %s", err)
+						fmt.Printf("getwd err: %v\n", err)
+						os.Exit(1)
 					}
 					childPID, _ := syscall.ForkExec(args[0], args, &syscall.ProcAttr{
 						Dir: pwd,
@@ -103,7 +103,7 @@ func onReady() {
 						},
 						Files: []uintptr{0, 1, 2}, // print message to the same pty
 					})
-					log.Printf("parent %d fork %d", os.Getpid(), childPID)
+					fmt.Printf("parent %d fork %d\n", os.Getpid(), childPID)
 					if childPID != 0 {
 						children = append(children, childPID)
 					}
