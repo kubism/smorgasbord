@@ -29,10 +29,6 @@ func main() {
 		sig := make(chan os.Signal)
 		signal.Notify(sig)
 		for s := range sig {
-			// see https://u.kfd.me/33
-			// SIGINT means graceful stop
-			// SIGTERM means graceful [or not], cleanup something
-			// SIGQUIT SIGKILL means immediately shutdown
 			if s == syscall.SIGCHLD {
 				children = []int{}
 			}
@@ -58,6 +54,7 @@ func main() {
 			syscall.Kill(child, syscall.SIGQUIT)
 		}
 	} else {
+		// otherwise let's show gui
 		ui.Main(setup)
 	}
 }
